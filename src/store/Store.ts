@@ -1,41 +1,68 @@
 import create from "zustand";
 
-import { CartItem } from "../App";
-export type Counter = {
-  readonly id: number;
-  readonly count: number;
-};
+import { CartItems } from "../AppTypes";
 
 type Store = {
-  readonly shoppingCart: CartItem[];
-  readonly handleAddToCart: (selectedItem: CartItem) => void;
-  readonly itemCount: Counter[];
-  readonly countCartItems: (itemCount: Counter[]) => number;
-  readonly incrementCount: (counterId: Counter["id"]) => void;
+  readonly shoppingCart: CartItems[];
+  readonly handleAddToCart: (selectedItem: CartItems) => void;
+  readonly incrementCount: (
+    counterId: CartItems["id"],
+    price: CartItems["price"]
+  ) => void;
+  readonly decrementCount: (
+    counterId: CartItems["id"],
+    price: CartItems["price"]
+  ) => void;
+  readonly itemCount: number;
+  readonly deleteItem: (
+    itemId: CartItems["id"],
+    removed: CartItems["count"],
+    price: CartItems["price"]
+  ) => void;
+  readonly totalPay: number;
 };
 
 const useStore = create<Store>((set) => ({
   shoppingCart: [],
-  itemCount: [],
-
-  countCartItems: (addedItems) => {
-    return addedItems
-      .map((addedItems) => addedItems.count)
-      .reduce((acc, itemCount) => acc + itemCount, 0);
-  },
+  itemCount: 0,
+  totalPay: 0,
   handleAddToCart: (selectedItem) => {
+    selectedItem.count = 1;
     set((state) => ({
       shoppingCart: [...state.shoppingCart, selectedItem],
-      itemCount: [...state.itemCount, { id: selectedItem.id, count: 1 }],
+      itemCount: state.itemCount + 1,
+      totalPay: state.totalPay + selectedItem.price,
     }));
   },
-  incrementCount: (counterId) => {
+  incrementCount: (counterId, price) => {
     set((state) => ({
-      itemCount: state.itemCount.map((counter) =>
+      shoppingCart: state.shoppingCart.map((counter) =>
         counter.id === counterId
           ? { ...counter, count: counter.count + 1 }
           : counter
       ),
+      itemCount: state.itemCount + 1,
+      totalPay: state.totalPay + price,
+    }));
+  },
+  decrementCount: (counterId, price) => {
+    set((state) => ({
+      shoppingCart: state.shoppingCart.map((counter) =>
+        counter.id === counterId
+          ? { ...counter, count: counter.count - 1 }
+          : counter
+      ),
+      itemCount: state.itemCount - 1,
+      totalPay: state.totalPay - price,
+    }));
+  },
+  deleteItem: (itemId, removed, price) => {
+    set((state) => ({
+      shoppingCart: state.shoppingCart.filter((items) => {
+        return items.id !== itemId;
+      }),
+      itemCount: state.itemCount - removed,
+      totalPay: state.totalPay - price * removed,
     }));
   },
 }));

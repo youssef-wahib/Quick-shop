@@ -7,48 +7,26 @@ import {
   Button,
   Typography,
 } from "@mui/material";
-import { CartItem } from "../App";
-import useStore, { Counter } from "../store/Store";
+import { CartItems } from "../AppTypes";
+import useStore from "../store/Store";
 
 type props = {
-  item: CartItem;
+  readonly item: CartItems;
 };
 
 const ProductCard: React.FC<props> = ({ item }) => {
   const store = useStore();
-  const handleAddToCart = (
-    itemCount: Counter[],
-    selectedItem: CartItem
-  ): void => {
-    if (
-      itemCount.find((itemList) => itemList.id === selectedItem.id) ===
-      undefined
-    )
-      store.handleAddToCart(item);
-    else {
-      store.incrementCount(selectedItem.id);
-      console.log(store.itemCount);
-    }
-  };
   return (
-    <Card raised sx={{ maxWidth: "23.5vw" }}>
+    <Card raised sx={{ maxWidth: 350 }}>
       <CardMedia
         component="img"
         height="250"
         image={item.image}
         alt={item.title}
       />
-      <CardContent sx={{ paddingBottom: "0", minHeight: 430 }}>
-        <Typography gutterBottom variant="h5" component="div">
+      <CardContent sx={{ paddingBottom: "0", minHeight: 300 }}>
+        <Typography gutterBottom variant="h6" component="div">
           {item.title}
-        </Typography>
-        <Typography
-          gutterBottom
-          variant="body2"
-          align="justify"
-          color="text.secondary"
-        >
-          {item.description}
         </Typography>
         <Typography variant="h6" component="div">
           ${item.price}
@@ -59,7 +37,12 @@ const ProductCard: React.FC<props> = ({ item }) => {
           sx={{ padding: "5", fontWeight: "bold", fontSize: 20 }}
           fullWidth
           onClick={() => {
-            handleAddToCart(store.itemCount, item);
+            const exist = store.shoppingCart.find((piece) => {
+              return piece.id === item.id;
+            })?.count;
+            exist
+              ? store.incrementCount(item.id, item.price)
+              : store.handleAddToCart(item);
           }}
           size="medium"
         >
